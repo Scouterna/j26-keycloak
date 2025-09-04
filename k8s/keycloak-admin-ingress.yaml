@@ -1,18 +1,19 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: keycloak
+  name: keycloak-admin
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     cert-manager.io/cluster-issuer: "letsencrypt"
+    nginx.ingress.kubernetes.io/whitelist-source-range: "45.131.188.80"
 spec:
   tls:
     - hosts:
-        - id.dev.j26.se
-      secretName: keycloak-tls
+        - admin.dev.j26.se
+      secretName: keycloak-admin-tls
   rules:
-    - host: id.dev.j26.se
+    - host: admin.dev.j26.se
       http:
         paths:
           - path: /

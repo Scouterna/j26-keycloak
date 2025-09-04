@@ -68,6 +68,10 @@ spec:
             # For production environments, set a hostname for a secure setup.
             - name: KC_HOSTNAME_STRICT
               value: "false"
+            - name: KC_HOSTNAME
+              value: "https://id.dev.j26.se"
+            - name: KC_HOSTNAME_ADMIN
+              value: "https://id-admin.dev.j26.se"
             - name: KC_HEALTH_ENABLED
               value: "true"
             - name: 'KC_CACHE'
