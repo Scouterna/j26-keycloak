@@ -10,10 +10,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - admin.dev.j26.se
+        - id-admin.dev.j26.se
       secretName: keycloak-admin-tls
   rules:
-    - host: admin.dev.j26.se
+    - host: id-admin.dev.j26.se
       http:
         paths:
           - path: /
