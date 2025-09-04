@@ -10,6 +10,7 @@ spec:
   tls:
     - hosts:
         - keycloak.dev.j26.se
+      secretName: keycloak-tls
   rules:
     - host: keycloak.dev.j26.se
       http:
