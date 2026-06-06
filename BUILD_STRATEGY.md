@@ -65,13 +65,14 @@ build (no separate published release asset) because nothing else consumes it.
 
 ### 3. The theme stays shared and external
 
-The image Dockerfile keeps `curl`-ing the theme from `scoutid-keycloak-theme`
-releases by version, exactly as `scoutid-keycloak` does. The theme is the genuinely
-shared resource; we do not fork it.
+The image Dockerfile `curl`s the theme from `scoutid-keycloak-theme` releases by
+version (`SCOUTID_THEME_VERSION`, currently `0.3.2`), exactly as `scoutid-keycloak`
+does. The theme is the genuinely shared resource; we do not fork it.
 
-> Note: the *minimal* homelab image currently ships **no** theme (default Keycloak
-> login). When J26 wants ScoutID branding, add the theme `curl` back to the
-> Dockerfile — the mechanism is identical to upstream, just re-enabled.
+> The theme (`themeName: scoutid`) is applied to the **jamboree26** realm via
+> `loginTheme: scoutid` in `keycloak-config/01-realm.yaml`. The **master**/admin
+> realm stays on the default Keycloak theme. Bump `SCOUTID_THEME_VERSION` in the
+> Dockerfile to pick up new theme releases.
 
 ### 4. Naming
 
@@ -112,8 +113,8 @@ Java package as `se.scouterna.keycloak` keeps this door open.
 - [ ] Seed `j26-keycloak/provider/` from the tested minimal working tree
       (currently uncommitted in `scoutid-keycloak-provider`).
 - [ ] Set pom groupId `se.j26.keycloak`; keep package `se.scouterna.keycloak`.
-- [ ] Add `j26-keycloak/docker/Dockerfile` (build JAR in-repo; theme curl optional/off
-      for minimal).
+- [ ] Add `j26-keycloak/docker/Dockerfile` (build JAR in-repo; curl the shared
+      scoutid theme; applied to jamboree26 via loginTheme).
 - [ ] Move `deploy/homelab/*` → `j26-keycloak/k8s/`, and `keycloak-config/*` →
       `j26-keycloak/keycloak-config/` (already re-targeted to the jamboree26 realm).
 - [ ] Revert `scoutid-keycloak-provider` working tree back to clean.
