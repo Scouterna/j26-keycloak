@@ -13,6 +13,16 @@ ssoSessionMaxLifespan: 2592000    # 30 days
 # Applied to jamboree26 only; the master/admin realm stays on the default theme.
 loginTheme: scoutid
 
+# Internationalization — the login theme ships en + sv (theme/src/login/i18n.ts).
+# Swedish is the primary audience; English is available via ?ui_locales=en or an
+# Accept-Language: en browser. Without this block Keycloak only serves the
+# default locale and ignores ui_locales/Accept-Language.
+internationalizationEnabled: true
+supportedLocales:
+  - sv
+  - en
+defaultLocale: sv
+
 # Login settings
 registrationAllowed: false
 resetPasswordAllowed: false
