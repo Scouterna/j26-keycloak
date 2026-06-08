@@ -1,0 +1,15 @@
+realm: jamboree26
+
+authenticationFlows:
+  - alias: "ScoutID browser login"
+    description: "ScoutID browser login flow (minimal J26, auth-only)"
+    providerId: basic-flow
+    topLevel: true
+    builtIn: false
+    authenticationExecutions:
+      - authenticatorFlow: false
+        authenticator: scoutnet-authenticator
+        requirement: REQUIRED
+        priority: 10
+
+browserFlow: "ScoutID browser login"

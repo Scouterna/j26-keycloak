@@ -36,6 +36,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            # Branch-name tag (e.g. :minimal-scoutid). Stable across builds on the
+            # same branch, so k8s manifests can reference it without being re-edited
+            # every build (editing the manifest is a commit, which would otherwise
+            # trigger a rebuild → new SHA → stale manifest, a loop). `/` → `-`.
+            type=ref,event=branch
+            # Immutable per-commit tag, for pinning/attestation/rollback.
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
 

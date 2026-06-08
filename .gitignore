@@ -6,3 +6,7 @@ provider/target/
 .idea/
 *.iml
 .vscode/
+
+# Local secrets — never commit (see k8s/secrets.example.yaml)
+secrets.local.yaml
+*.local.yaml

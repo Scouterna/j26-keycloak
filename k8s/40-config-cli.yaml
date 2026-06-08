@@ -1,0 +1,47 @@
+# keycloak-config-cli Job. Applies the realm/auth/scope/client config from the
+# `keycloak-config/` directory (mounted via the keycloak-config ConfigMap, which
+# the apply.sh script builds from the real YAML files so there's one source of truth).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-config
+  namespace: j26-keycloak-scoutid
+spec:
+  backoffLimit: 10
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: keycloak-config
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: keycloak-config-cli
+          image: docker.io/adorsys/keycloak-config-cli:latest-26
+          env:
+            - name: KEYCLOAK_URL
+              value: http://keycloak:8080
+            - name: KEYCLOAK_USER
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin
+                  key: KC_BOOTSTRAP_ADMIN_USERNAME
+            - name: KEYCLOAK_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin
+                  key: KC_BOOTSTRAP_ADMIN_PASSWORD
+            - name: KEYCLOAK_AVAILABILITYCHECK_ENABLED
+              value: "true"
+            - name: KEYCLOAK_AVAILABILITYCHECK_TIMEOUT
+              value: "300s"
+            - name: IMPORT_FILES_LOCATIONS
+              value: /config/*
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: keycloak-config

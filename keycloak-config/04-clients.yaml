@@ -1,0 +1,26 @@
+realm: jamboree26
+
+clients:
+  # Account console needs access to the profile/email scopes to show attributes
+  - clientId: account
+    defaultClientScopes:
+      - profile
+      - email
+
+  - clientId: scout-test-client
+    name: Scout Test Client
+    description: "Development client for testing ScoutID login"
+    enabled: true
+    publicClient: true
+    standardFlowEnabled: true
+    directAccessGrantsEnabled: false
+    redirectUris:
+      - "http://localhost:*"
+      - "https://localhost:*"
+      - "https://new-id.maws.se/realms/jamboree26/account/*"
+    webOrigins:
+      - "+"
+    consentRequired: true
+    defaultClientScopes:
+      - profile
+      - email

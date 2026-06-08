@@ -1,0 +1,18 @@
+realm: jamboree26
+
+clientScopes:
+  # Extend the standard profile scope with scoutnet_member_no
+  - name: profile
+    protocol: openid-connect
+    protocolMappers:
+      - name: scoutnet_member_no
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          user.attribute: scoutnet_member_no
+          claim.name: scoutnet_member_no
+          jsonType.label: String
+          id.token.claim: "true"
+          access.token.claim: "true"
+          userinfo.token.claim: "true"
+          introspection.token.claim: "true"

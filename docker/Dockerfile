@@ -30,6 +30,12 @@ FROM quay.io/keycloak/keycloak:${KEYCLOAK_TAG} AS builder
 ENV KC_HEALTH_ENABLED=true
 ENV KC_METRICS_ENABLED=true
 ENV KC_DB=postgres
+# Bake in per-user-event metrics (keycloak_logins / failed_login_attempts /
+# registrations). This is a build-time feature, so it must be set before kc.sh
+# build — it cannot be enabled at runtime under `start --optimized`. The runtime
+# KC_EVENT_METRICS_USER_* vars live in k8s/20-keycloak.yaml.
+ENV KC_FEATURES=user-event-metrics
+ENV KC_EVENT_METRICS_USER_ENABLED=true
 
 WORKDIR /opt/keycloak
 
