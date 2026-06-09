@@ -49,8 +49,9 @@ jobs:
         id: push
         uses: docker/build-push-action@v7
         with:
-          # Build context is the repo root so the Dockerfile can compile
-          # provider/ in-repo (no external release artifact).
+          # Build context is the repo root so the Dockerfile can build the
+          # login theme from theme/ in-repo. The provider JAR is pulled from
+          # the upstream scoutid-keycloak-provider release at build time.
           context: .
           file: ./docker/Dockerfile
           push: true

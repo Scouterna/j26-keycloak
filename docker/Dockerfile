@@ -1,24 +1,27 @@
 # syntax=docker/dockerfile:1
 #
-# J26 minimal ScoutID Keycloak image.
+# J26 full ScoutID Keycloak image.
 #
-# Monorepo build: the minimal provider JAR is compiled here from ./provider
-# (no external release artifact) and the login theme JAR is built here from
-# ./theme (a vendored copy of scoutid-keycloak-theme v0.3.2 — Keycloakify/Vite).
-# Both are baked into an optimized Keycloak image. The theme is applied only to
-# the jamboree26 realm (loginTheme: scoutid in keycloak-config); master stays
-# themeless.
+# The full Scoutnet authenticator provider JAR is pulled from the upstream
+# release (Scouterna/scoutid-keycloak-provider v${SCOUTNET_PROVIDER_VERSION})
+# instead of being compiled from a vendored ./provider copy. The login theme
+# JAR is still built here from ./theme (a vendored copy of
+# scoutid-keycloak-theme v0.3.2 — Keycloakify/Vite). Both are baked into an
+# optimized Keycloak image. The theme is applied only to the jamboree26 realm
+# (loginTheme: scoutid in keycloak-config); master stays themeless.
 #
 # Build context = repo root:
 #   docker build -f docker/Dockerfile -t <registry>/j26-keycloak:<tag> .
 
 ARG KEYCLOAK_TAG="26.5.6"
+ARG SCOUTNET_PROVIDER_VERSION="0.13.0"
 
-# --- stage 1: build the provider JAR (./provider) ---
-FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS build
-WORKDIR /build
-COPY provider/ ./
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -q -B -DskipTests clean package
+# --- stage 1: download the provider JAR from the upstream release ---
+FROM docker.io/library/alpine:3 AS provider
+ARG SCOUTNET_PROVIDER_VERSION
+RUN apk add --no-cache curl
+RUN curl -fsSL -o /keycloak-scoutnet-authenticator.jar \
+    https://github.com/Scouterna/scoutid-keycloak-provider/releases/download/v${SCOUTNET_PROVIDER_VERSION}/keycloak-scoutnet-authenticator-${SCOUTNET_PROVIDER_VERSION}.jar
 
 # --- stage 1b: build the login theme JAR (./theme) ---
 # Keycloakify drives the build with Node (pnpm) and invokes Maven internally,
@@ -55,8 +58,8 @@ ENV KC_EVENT_METRICS_USER_ENABLED=true
 
 WORKDIR /opt/keycloak
 
-COPY --from=build --chown=keycloak:keycloak --chmod=644 \
-    /build/target/keycloak-scoutnet-authenticator-*.jar \
+COPY --from=provider --chown=keycloak:keycloak --chmod=644 \
+    /keycloak-scoutnet-authenticator.jar \
     /opt/keycloak/providers/keycloak-scoutnet-authenticator.jar
 COPY --from=theme --chown=keycloak:keycloak --chmod=644 \
     /theme/dist_keycloak/keycloak-theme-for-kc-all-other-versions.jar \
