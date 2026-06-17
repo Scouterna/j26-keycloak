@@ -16,6 +16,29 @@ clients:
     attributes:
       login_theme: keycloak.v2
 
+  - clientId: j26-notifications
+    name: j26-notifications
+    description: "Service account for the notifications backend — reads users and groups"
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    secret: $(env:J26_NOTIFICATIONS_CLIENT_SECRET)
+    defaultClientScopes:
+      - service_account
+      - web-origins
+      - acr
+      - profile
+      - roles
+      - basic
+      - email
+    serviceAccountClientRoles:
+      realm-management:
+        - query-groups
+        - view-users
+
   - clientId: scout-test-client
     name: Scout Test Client
     description: "Development client for testing ScoutID login"
