@@ -1,5 +1,22 @@
 realm: jamboree26
 
+# Clients are config-as-truth: this file is the complete, authoritative list of
+# J26 application clients. keycloak-config-cli runs with default managed mode, so
+# managed sub-resources (client roles, scope mappings) not present here will be
+# pruned on the next sync — keep this file in step with reality.
+#
+# This is the PRODUCTION clients config (host app.jamboree.se), intended for the
+# prod branch / production manifests. The dev environment keeps its own existing
+# configuration (already deployed) and is NOT updated from this file.
+#
+# Modeling decided from a code scan of the j26-* repos:
+#   - Only j26-auth, j26-notifications, j26-group-import authenticate AS the client
+#     and need a secret.
+#   - j26-platsbank and j26-signupinfo only VERIFY JWTs; they exist purely as role
+#     containers so resource_access.<client>.roles can be assigned. No secret/flows.
+#   - j26-booking is deferred; j26-screens/j26-auth-local and the dev test clients
+#     are not ported.
+
 clients:
   # Account console needs access to all scopes to show custom attributes
   - clientId: account
@@ -15,6 +32,37 @@ clients:
       browser: browser
     attributes:
       login_theme: keycloak.v2
+
+  # ── Confidential clients (authenticate as the client; need a secret) ──────────
+
+  # Central OIDC login frontend (authorization-code flow).
+  # Production host app.jamboree.se. No localhost callbacks in prod.
+  - clientId: j26-auth
+    name: Jamboree26
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: true
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    secret: $(env:J26_AUTH_CLIENT_SECRET)
+    rootUrl: https://app.jamboree.se
+    adminUrl: https://app.jamboree.se
+    baseUrl: https://app.jamboree.se/
+    redirectUris:
+      - https://app.jamboree.se/auth/callback
+      - /auth/callback
+    webOrigins:
+      - https://app.jamboree.se
+    frontchannelLogout: true
+    defaultClientScopes:
+      - service_account
+      - web-origins
+      - acr
+      - profile
+      - roles
+      - basic
+      - email
 
   - clientId: j26-notifications
     name: j26-notifications
@@ -35,25 +83,129 @@ clients:
       - basic
       - email
 
-  - clientId: scout-test-client
-    name: Scout Test Client
-    description: "Development client for testing ScoutID login"
+  # Service account for the j26-scoutid-sync CronJob: creates users and manages
+  # group memberships (via manage-users; see the realm-management roles in the
+  # users block below).
+  - clientId: j26-group-import
+    name: j26-group-import
+    description: "Service account for the group import job (scoutid-sync)"
     enabled: true
-    publicClient: true
-    standardFlowEnabled: true
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
     directAccessGrantsEnabled: false
-    redirectUris:
-      - "http://localhost:*"
-      - "https://localhost:*"
-    webOrigins:
-      - "+"
-    consentRequired: true
+    serviceAccountsEnabled: true
+    secret: $(env:J26_GROUP_IMPORT_CLIENT_SECRET)
     defaultClientScopes:
+      - service_account
+      - web-origins
+      - acr
       - profile
+      - roles
+      - basic
       - email
-      - phone
-      - scoutnet-memberships
 
+  # ── Role-container clients (verify JWTs only; no secret, no flows) ────────────
+
+  # j26-platsbank reads resource_access["j26-platsbank"].roles. All six request
+  # roles from the baseline export are kept (the current code uses a subset, but
+  # the full set may be assigned to users already / planned).
+  - clientId: j26-platsbank
+    name: j26-platsbank
+    description: "Role container for platsbank (JWT verification only)"
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+
+  # j26-signupinfo reads resource_access["j26-signupinfo"].roles (prefix
+  # "j26-signupinfo:") and also accepts the j26-photography realm role.
+  - clientId: j26-signupinfo
+    name: j26-signupinfo
+    description: "Role container for signupinfo (JWT verification only)"
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+
+  # The following three are kept as role containers so their existing client roles
+  # exist and can be assigned (per developer request). uma_protection is omitted —
+  # Keycloak auto-creates it only when authorization services are enabled, which
+  # these role-container clients deliberately leave off.
+  - clientId: j26-booking
+    name: j26-booking
+    description: "Role container for booking (JWT verification only)"
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+
+  - clientId: j26-bracelet-checker
+    name: j26-bracelet-checker
+    description: "Role container for bracelet-checker (JWT verification only)"
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+
+  - clientId: j26-screens
+    name: j26-screens
+    description: "Role container for screens (JWT verification only)"
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+
+# Client roles live in this top-level roles.client block keyed by clientId, never
+# nested inside the clients list (keycloak-config-cli rejects a `roles` field on a
+# ClientRepresentation). Same pattern as the users block below. These are the role
+# containers above; keeping the roles here lets resource_access.<client>.roles be
+# assigned to users.
+roles:
+  client:
+    j26-platsbank:
+      - name: "requests:create"
+      - name: "requests:staff:create"
+      - name: "requests:staff:book"
+      - name: "requests:leader:create"
+      - name: "requests:leader:book"
+      - name: "requests:admin:book"
+        description: "Allows a user to book on behalf of other users."
+    j26-signupinfo:
+      - name: "all:read"
+      - name: "basic:read"
+      - name: "summaries:read"
+    j26-booking:
+      - name: "events:read"
+    j26-bracelet-checker:
+      - name: "items:create"
+      - name: "items:handout"
+    j26-screens:
+      - name: "devices:read"
+        description: "List devices without modifying them"
+      - name: "devices:write"
+        description: "Create, modify and delete devices"
+      - name: "surveys:read"
+        description: "List surveys and read their results without modifying them"
+      - name: "surveys:write"
+        description: "Create, modify and delete surveys"
+      - name: "tags:read"
+        description: "List tags without modifying them"
+      - name: "tags:write"
+        description: "Create, modify and delete tags"
+
+# Service-account role assignments live in this top-level users block, never
+# nested inside clients (keycloak-config-cli syntax).
 users:
   - username: service-account-j26-notifications
     enabled: true
@@ -62,3 +214,15 @@ users:
       realm-management:
         - query-groups
         - view-users
+
+  - username: service-account-j26-group-import
+    enabled: true
+    serviceAccountClientId: j26-group-import
+    clientRoles:
+      realm-management:
+        - manage-users
+        - view-users
+        - query-groups
+        # NOTE: no `manage-groups` — that role does not exist in the
+        # realm-management client (Keycloak 26.5.6). manage-users already covers
+        # managing users' group memberships, which is what scoutid-sync needs.

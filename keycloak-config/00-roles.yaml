@@ -1,0 +1,10 @@
+# Custom realm roles. Ported from dev.id.scouterna.se so they're managed
+# declaratively here rather than created by hand in the admin console.
+realm: jamboree26
+
+roles:
+  realm:
+    - name: j26-photography
+      description: "Role handed out to people working with photography which allows them to search limited details for participants."
+      composite: false
+      clientRole: false

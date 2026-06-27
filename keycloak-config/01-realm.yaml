@@ -7,8 +7,9 @@
 realm: jamboree26
 enabled: true
 
-# Token and session lifetimes
-accessTokenLifespan: 300          # 5 minutes
+# Token and session lifetimes — matched to the dev.id.scouterna.se / id.dev.j26.se
+# baseline export taken as the production source of truth.
+accessTokenLifespan: 1800         # 30 minutes
 ssoSessionIdleTimeout: 2592000    # 30 days
 ssoSessionMaxLifespan: 2592000    # 30 days
 
@@ -27,16 +28,55 @@ supportedLocales:
   - en
 defaultLocale: sv
 
-# Login settings — kept as J26's deliberate choices (the upstream master-realm
-# example instead has loginWithEmailAllowed: false / rememberMe: true).
+# Login settings — matched to the production baseline export. Login is by username
+# only (loginWithEmailAllowed: false); duplicate emails are allowed because Scoutnet
+# accounts can share an address.
 registrationAllowed: false
 resetPasswordAllowed: false
 rememberMe: false
-loginWithEmailAllowed: true
+loginWithEmailAllowed: false
 registrationEmailAsUsername: false
 duplicateEmailsAllowed: true
 verifyEmail: false
 editUsernameAllowed: false
+
+# Parent group + required child groups for the TWO j26-scoutid-sync CronJobs
+# (funktionärer sync + participants sync). Both read/write their managed subtree
+# UNDER /j26-scoutid-sync. Neither creates the parent, nor the top-level child groups
+# that config.yml's assignments reference — those must PRE-EXIST or the sync throws
+# `Group "<name>" not found in Keycloak` / `Parent group "<name>" not found`. The
+# scripts DO create the dynamic sub-groups on demand (function slugs, j26-rover, and
+# all children under j26-groups/j26-villages/j26-districts — per-kår/village/district),
+# which must NOT be in config. So we declare the parent + only the required top-level
+# children here.
+#   funktionär sync (app-manifest/j26-scoutid-sync) needs: j26-staff, j26-planning-staff
+#   participants sync (app-manifest/j26-scoutid-sync-participants) needs: j26-leader,
+#     j26-leader-staff, and the dynamic parents j26-groups, j26-villages, j26-districts
+# IMPORTANT: the config-cli Job MUST run with IMPORT_MANAGED_GROUP=no-delete
+# (j26-infra .../40-config-cli.yaml). config-cli's default 'full' managed mode would
+# PRUNE every group not listed here — i.e. wipe everything the syncs create under
+# these children (dev had j26-groups=577, j26-villages=242) — on each realm import.
+# no-delete lets config-cli create/update the declared groups while leaving the
+# sync-owned descendants untouched.
+# j26-planning-staff carries client roles (ported from dev) so planning staff get
+# signupinfo summaries + platsbank booking access via resource_access.<client>.roles.
+# The others have no roles in dev.
+groups:
+  - name: j26-scoutid-sync
+    subGroups:
+      - name: j26-staff
+      - name: j26-planning-staff
+        clientRoles:
+          j26-signupinfo:
+            - "summaries:read"
+          j26-platsbank:
+            - "requests:staff:book"
+            - "requests:create"
+      - name: j26-leader
+      - name: j26-leader-staff
+      - name: j26-groups
+      - name: j26-villages
+      - name: j26-districts
 
 attributes:
   userProfileEnabled: "true"
@@ -58,7 +98,6 @@ userProfile:
         length:
           min: 3
           max: 255
-        username-prohibited-characters: {}
         up-username-not-idn-homograph: {}
       permissions:
         view: [admin, user]
