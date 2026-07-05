@@ -205,7 +205,11 @@ roles:
       - name: "basic:read"
       - name: "summaries:read"
     j26-booking:
-      - name: "events:read"
+      - name: "activities:manage"
+      - name: "bookings:read"
+      - name: "bookings:self:create"
+      - name: "bookings:others:create"
+      - name: "admin"
     j26-bracelet-checker:
       - name: "items:create"
       - name: "items:handout"

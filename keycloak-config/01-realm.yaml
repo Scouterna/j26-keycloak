@@ -63,6 +63,10 @@ editUsernameAllowed: false
 # The others have no roles in dev.
 groups:
   - name: j26-scoutid-sync
+    clientRoles:
+      # For now we give this role to all users
+      j26-booking:
+        - "bookings:self:create"
     subGroups:
       - name: staff
       - name: planning-staff
