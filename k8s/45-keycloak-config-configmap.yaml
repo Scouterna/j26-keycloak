@@ -109,13 +109,10 @@ data:
           displayName: ${username}
           group: basic
           validations:
-            # No up-username-not-idn-homograph: scoutnet usernames are `scoutnet|<id>`,
-            # and the pipe trips Keycloak's IDN-homograph/mixed-script guard, failing the
-            # sync with error-username-invalid-character. The scheme is our standard
-            # account format, not attacker input, so the validator is removed.
             length:
               min: 3
               max: 255
+            up-username-not-idn-homograph: {}
           permissions:
             view: [admin, user]
             edit: [admin]
