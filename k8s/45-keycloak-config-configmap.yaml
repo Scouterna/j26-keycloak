@@ -614,10 +614,10 @@ data:
     # Modeling decided from a code scan of the j26-* repos:
     #   - Only j26-auth, j26-notifications, j26-group-import authenticate AS the client
     #     and need a secret.
-    #   - j26-platsbank, j26-signupinfo, j26-cms and j26-reports only VERIFY JWTs; they
-    #     exist purely as role containers so resource_access.<client>.roles can be
-    #     assigned. No secret/flows.
-    #   - j26-booking is deferred; j26-auth-local and the dev test clients are not ported.
+    #   - j26-platsbank, j26-signupinfo, j26-booking, j26-bracelet-checker, j26-screens,
+    #     j26-cms and j26-reports only VERIFY JWTs; they exist purely as role containers
+    #     so resource_access.<client>.roles can be assigned. No secret/flows.
+    #   - j26-auth-local and the dev test clients (scout-test-client) are not ported.
 
     clients:
       # Account console needs access to all scopes to show custom attributes
