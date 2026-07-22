@@ -58,11 +58,16 @@ editUsernameAllowed: false
 # these children (dev had groups=577, villages=242) — on each realm import.
 # no-delete lets config-cli create/update the declared groups while leaving the
 # sync-owned descendants untouched.
+# The standalone admin groups below the sync subtree (j26-checkin-admin,
+# j26-cms-manager, j26-platsbank-admin, j26-reports) are NOT sync-owned — their
+# membership is assigned by hand — but their STRUCTURE must still be declared here
+# so config-cli has a group to resolve for the role assignments.
 # This file declares only the group STRUCTURE. The group-to-client-role ASSIGNMENTS
-# (planning-staff → signupinfo/platsbank, j26-scoutid-sync → booking) live in
-# 05-group-roles.yaml, which imports AFTER 04-clients.yaml so the referenced client
-# roles already exist — a fresh-realm import fails here otherwise (the assignment
-# references a role config-cli hasn't created yet). See 05-group-roles.yaml.
+# (planning-staff → signupinfo/platsbank, j26-scoutid-sync → booking, and the admin
+# groups above) live in 05-group-roles.yaml, which imports AFTER 04-clients.yaml so
+# the referenced client roles already exist — a fresh-realm import fails here
+# otherwise (the assignment references a role config-cli hasn't created yet). See
+# 05-group-roles.yaml.
 groups:
   - name: j26-scoutid-sync
     subGroups:
@@ -73,6 +78,10 @@ groups:
       - name: groups
       - name: villages
       - name: districts
+  - name: j26-checkin-admin
+  - name: j26-cms-manager
+  - name: j26-platsbank-admin
+  - name: j26-reports
 
 attributes:
   userProfileEnabled: "true"

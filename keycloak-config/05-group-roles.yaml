@@ -10,14 +10,18 @@
 # the assignments here, after 04, fixes the fresh-realm case.
 #
 # The group STRUCTURE (subgroup names, no-delete protection) is declared in
-# 01-realm.yaml. This file re-declares the same structure only so the group
-# paths resolve for the role attachment; IMPORT_MANAGED_GROUP=no-delete
+# 01-realm.yaml — both the j26-scoutid-sync subtree and the standalone admin
+# groups. This file re-declares the same structure only so the group paths
+# resolve for the role attachment; IMPORT_MANAGED_GROUP=no-delete
 # (j26-infra .../40-config-cli.yaml) keeps the sync-owned descendant groups from
 # being pruned across this second group import.
 #
-# planning-staff carries client roles (ported from dev) so planning staff get
-# signupinfo summaries + platsbank booking access via resource_access.<client>.roles.
-# j26-scoutid-sync (the parent) grants booking self-create to all synced users.
+# The assignments grant access via resource_access.<client>.roles on members'
+# tokens. j26-scoutid-sync (the parent) grants booking self-create to every
+# synced user; staff/planning-staff/leader add booking + platsbank (+ signupinfo)
+# roles. The standalone admin groups (j26-checkin-admin, j26-cms-manager,
+# j26-platsbank-admin, j26-reports) carry elevated roles for hand-picked members
+# and are NOT sync-owned — their membership is assigned by hand.
 realm: jamboree26
 
 groups:
@@ -28,15 +32,51 @@ groups:
         - "bookings:self:create"
     subGroups:
       - name: staff
+        clientRoles:
+          j26-booking:
+            - "bookings:self:create"
+            - "bookings:read"
+          j26-platsbank:
+            - "requests:staff:book"
       - name: planning-staff
         clientRoles:
+          j26-booking:
+            - "activities:manage"
+            - "bookings:others:create"
           j26-signupinfo:
             - "summaries:read"
           j26-platsbank:
             - "requests:staff:book"
             - "requests:create"
       - name: leader
+        clientRoles:
+          j26-booking:
+            - "bookings:self:create"
+          j26-platsbank:
+            - "requests:leader:book"
       - name: leader-staff
       - name: groups
       - name: villages
       - name: districts
+
+  - name: j26-checkin-admin
+    clientRoles:
+      j26-signupinfo:
+        - "all:read"
+        - "basic:read"
+        - "summaries:read"
+  - name: j26-cms-manager
+    clientRoles:
+      j26-cms:
+        - "editor"
+        - "admin"
+  - name: j26-platsbank-admin
+    clientRoles:
+      j26-platsbank:
+        - "requests:staff:book"
+        - "requests:create"
+        - "requests:leader:book"
+  - name: j26-reports
+    clientRoles:
+      j26-reports:
+        - "diet:read"

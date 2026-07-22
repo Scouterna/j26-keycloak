@@ -12,10 +12,10 @@ realm: jamboree26
 # Modeling decided from a code scan of the j26-* repos:
 #   - Only j26-auth, j26-notifications, j26-group-import authenticate AS the client
 #     and need a secret.
-#   - j26-platsbank and j26-signupinfo only VERIFY JWTs; they exist purely as role
-#     containers so resource_access.<client>.roles can be assigned. No secret/flows.
-#   - j26-booking is deferred; j26-screens/j26-auth-local and the dev test clients
-#     are not ported.
+#   - j26-platsbank, j26-signupinfo, j26-booking, j26-bracelet-checker, j26-screens,
+#     j26-cms and j26-reports only VERIFY JWTs; they exist purely as role containers
+#     so resource_access.<client>.roles can be assigned. No secret/flows.
+#   - j26-auth-local and the dev test clients (scout-test-client) are not ported.
 
 clients:
   # Account console needs access to all scopes to show custom attributes
@@ -182,6 +182,32 @@ clients:
     directAccessGrantsEnabled: false
     serviceAccountsEnabled: false
 
+  # j26-cms and j26-reports only VERIFY JWTs (jose jwtVerify against the shared
+  # j26-auth JWKS) and read resource_access.<client>.roles — confirmed from a code
+  # scan of both repos: no client_secret, no token/grant flow. Login is delegated
+  # to j26-auth; they just read its cookie. So they are role containers like
+  # j26-signupinfo, not confidential clients (the dev export's serviceAccount +
+  # secret were unused).
+  - clientId: j26-cms
+    name: j26-cms
+    description: "Role container for cms (JWT verification only)"
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+
+  - clientId: j26-reports
+    name: j26-reports
+    description: "Role container for reports (JWT verification only)"
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+
 # Client roles live in this top-level roles.client block keyed by clientId, never
 # nested inside the clients list (keycloak-config-cli rejects a `roles` field on a
 # ClientRepresentation). Same pattern as the users block below. These are the role
@@ -213,6 +239,11 @@ roles:
     j26-bracelet-checker:
       - name: "items:create"
       - name: "items:handout"
+    j26-cms:
+      - name: "editor"
+      - name: "admin"
+    j26-reports:
+      - name: "diet:read"
     j26-screens:
       - name: "devices:read"
         description: "List devices without modifying them"
