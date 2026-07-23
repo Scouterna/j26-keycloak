@@ -681,6 +681,8 @@ data:
               lightweight.claim: "false"
               access.token.claim: "true"
               claim.name: groups
+        attributes:
+          post.logout.redirect.uris: "https://app.jamboree.se/*"
 
       - clientId: j26-notifications
         name: j26-notifications
@@ -967,6 +969,5 @@ data:
             - "diet:read"
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   name: keycloak-config
   namespace: j26-keycloak-scoutid
